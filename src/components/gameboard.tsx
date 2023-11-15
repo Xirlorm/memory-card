@@ -1,25 +1,39 @@
 import { useEffect, useState } from "react"
 import Card from "./card";
 
+interface Card {
+	image: string,
+	clicked?: boolean,
+	name: string,
+	id: number,
+}
 
-export default function Gameboard({scoreState, bestScoreState, setTotal}) {
-	const [images, setImages] = useState([]);
-	const [score, setScore] = scoreState;
-	const [bestScore, setBestScore] = bestScoreState;
+interface GameboardArg {
+	scoreState: [number, Function]
+	bestScoreState: [number, Function]
+	setTotal: Function
+}
 
-	function onClick(image) {
+export default function Gameboard(props: GameboardArg) {
+	const [images, setImages] = useState([] as Card[]);
+	const [score, setScore] = props.scoreState;
+	const [bestScore, setBestScore] = props.bestScoreState;
+
+	function onClick(image: Card) {
 		if (image.clicked) {
 			if (score > bestScore) setBestScore(score)
 			setScore(0)
 
 			// Reset clicked state of images
-			setImages(images => images.map(image => ({...image, clicked: false})))
+			setImages((images: Card[]) => {
+				return images.map((image: Card) => ({...image, clicked: false}))
+			})
 
 			return
 		}
 			
 		setImages((images) => {
-			let copy = images.map(image => ({...image}))
+			let copy = images.map((image: Card) => ({...image}))
 
 			// Mark card as clicked
 			for (let item of copy) {
@@ -31,7 +45,7 @@ export default function Gameboard({scoreState, bestScoreState, setTotal}) {
 			return copy
 		})
 
-		setScore(score => score + 1)
+		setScore((score: number) => score + 1)
 	}
 
 	useEffect(() => {
@@ -49,9 +63,9 @@ export default function Gameboard({scoreState, bestScoreState, setTotal}) {
 					const data = await results.json();
 					// Structure fetched data
 					setImages(() => {
-						return data.results.map(({name, image, id}) => ({name, image, id}))
+						return data.results.map(({name = "", image = "", id = -1}) => ({name, image, id}))
 					});
-					setTotal(data.results.length)
+					props.setTotal(data.results.length)
 				}
 		})()
 
@@ -60,8 +74,8 @@ export default function Gameboard({scoreState, bestScoreState, setTotal}) {
 
 	return (
 		<div className="gameboard text-gray-200 p-2 flex flex-wrap justify-center">
-		{images.length ? images.map(src => (
-			<Card onClick={() => onClick(src)} name={src.name} image={src.image} id={src.id} />
+		{images.length ? images.map((image: Card) => (
+			<Card onClick={() => onClick(image)} name={image.name} image={image.image} id={image.id} />
 		)) : 'Loading...'}
 		</div>
 	)
